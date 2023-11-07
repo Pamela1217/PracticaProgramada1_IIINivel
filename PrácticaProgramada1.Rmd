@@ -1,0 +1,94 @@
+---
+title: "Práctica Programada 1"
+author: "Sandra López Torres"
+date: "2023-11-04"
+editor_options: 
+  markdown: 
+    wrap: 72
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(shiny)
+library(shinydashboard)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(gapminder)
+library(readr)
+```
+
+1.Cargar tus datos
+
+```{r}
+getwd()
+```
+
+```{r}
+setwd("C:/Users/Admin/OneDrive/Documentos/Nueva carpeta/Programación/Nivel III/PracticaProgramada1_IIINivel")
+```
+
+```{r}
+ datos <- readr::read_csv("datos/datos_empleo_genero.csv", skip = 1)
+```
+
+2. Cree una aplicación interactiva de shiny. La aplicación va a permitir visualizar información sobre datos de
+des(empleo) y género para algunos países de Latinoamérica y el Caribe.Los datos fueron proporcionados en
+el google classroom. Cree la aplicación en un archivo llamado app1.R
+
+
+```{r}
+# Cargando los datos desde el archivo CSV
+datos <- read_csv("datos/datos_empleo_genero.csv")
+
+# Definiendo la interfaz de la aplicación
+ui <- fluidPage(
+  titlePanel("Visualización de Datos de Empleo y Género en Latinoamérica y el Caribe"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("variable", "Seleccione una variable:",
+                  choices = c("empleadoras_mujeres", "empleadores_hombres",
+                              "empleo_agricultura_mujeres", "empleo_agricultura_hombres",
+                              "empleo_industria_mujeres", "empleo_industria_hombres",
+                              "empleo_servicios_mujeres", "empleo_servicios_hombres",
+                              "empleo_informal_mujeres", "empleo_informal_hombres",
+                              "autoempleo_mujeres", "autoempleo_hombres",
+                              "empleo_parcial_mujeres", "desempleo_educacion_mujeres",
+                              "desempleo_educacion_hombres", "desempleo_mujeres",
+                              "desempleo_hombres", "trabajo_domestico_no_remunerado_mujeres",
+                              "trabajo_domestico_no_remunerado_hombres")),
+      selectInput("pais_region", "Seleccione un país o región:",
+                  choices = unique(datos$pais_region))
+    ),
+    
+    mainPanel(
+      plotOutput("plot"),
+      tableOutput("table")
+    )
+  )
+)
+
+# Definiendo el servidor de la aplicación
+server <- function(input, output) {
+  filtered_data <- reactive({
+    datos %>%
+      filter(pais_region == input$pais_region)
+  })
+  
+  output$plot <- renderPlot({
+    ggplot(filtered_data(), aes(x = anyo, y = !!sym(input$variable))) +
+      geom_line() +
+      labs(x = "Año", y = "Valor", title = input$variable)
+  })
+  
+  output$table <- renderTable({
+    head(filtered_data())
+  })
+}
+
+# Creando la aplicación Shiny
+shinyApp(ui, server)
+```
+
